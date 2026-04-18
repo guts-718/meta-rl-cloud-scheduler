@@ -2,4 +2,6 @@ notes_for_me
 *.log
 *.tmp
 venv
-venv/
+venv/ 
+__pycache__
+__pycache__/
