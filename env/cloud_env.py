@@ -112,13 +112,22 @@ class CloudEnv:
 
         # 5) reward
         avg_util = self._avg_utilization()
-        reward = (
-            0.4 * avg_util
-            + 0.4 * scheduled_now
-            + 0.2 * completed_now
-            - waiting_penalty
-        )
 
+        # Without fairness: scheduler can ignore long tasks forever
+        # With fairness: longer wait > increasing penalty
+        # forces scheduler to eventually pick them
+        fairness_penalty = 0.0
+        if len(self.queue) > 0:
+            head_task = self.queue[0]
+            fairness_penalty = head_task.wait_time(self.time) / 50.0  # normalized
+
+        reward = (
+            0.5 * avg_util
+            + 0.3 * completed_now
+            + 0.1 * scheduled_now
+            - 0.1 * waiting_penalty
+            - 0.05 * fairness_penalty
+        )
         # 6) time++
         self.time += 1
 
