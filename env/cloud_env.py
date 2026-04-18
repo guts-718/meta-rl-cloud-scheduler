@@ -14,18 +14,31 @@ class CloudEnv:
         ram_capacity: float = 1.0,
         max_queue: int = 1000,
         seed: int | None = None,
+        task_config=None
     ):
         self.num_servers = num_servers
         self.cpu_capacity = cpu_capacity
         self.ram_capacity = ram_capacity
         self.max_queue = max_queue
         self.seed = seed
+    
 
         self.servers: List[Server] = []
         self.queue: deque[Task] = deque()
         self.time: int = 0
 
-        self.task_gen = TaskGenerator(TaskGenConfig(seed=seed))
+        if task_config:
+            self.task_gen = TaskGenerator(
+                TaskGenConfig(
+                    lam=task_config.lam,
+                    cpu_range=task_config.cpu_range,
+                    ram_range=task_config.ram_range,
+                    duration_range=task_config.duration_range,
+                    seed=seed
+                )
+            )
+        else:
+            self.task_gen = TaskGenerator(TaskGenConfig(seed=seed))
 
         # stats
         self.total_completed = 0
@@ -121,13 +134,21 @@ class CloudEnv:
             head_task = self.queue[0]
             fairness_penalty = head_task.wait_time(self.time) / 50.0  # normalized
 
+        queue_penalty = len(self.queue) / 50.0
+ 
         reward = (
-            0.5 * avg_util
-            + 0.3 * completed_now
+            0.6 * avg_util
+            + 0.25 * completed_now
             + 0.1 * scheduled_now
-            - 0.1 * waiting_penalty
-            - 0.05 * fairness_penalty
+            - 0.05 * waiting_penalty
+            - 0.02 * fairness_penalty
+            - 0.05 * queue_penalty
         )
+
+        # bonus for valid scheduling
+        if scheduled_now:
+            reward += 0.05
+
         # 6) time++
         self.time += 1
 
@@ -187,4 +208,6 @@ class CloudEnv:
         else:
             state.extend([0.0, 0.0, 0.0, 0.0])
 
+        queue_pressure = min(1.0, len(self.queue) / 50.0)
+        state.append(queue_pressure)
         return state

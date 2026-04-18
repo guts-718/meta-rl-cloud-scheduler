@@ -12,7 +12,7 @@ action_dim = env.num_servers + 1
 
 agent = ACAgent(state_dim, action_dim)
 
-EPISODES = 800
+EPISODES = 1000
 STEPS = 300
 
 reward_history = []
