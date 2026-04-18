@@ -3,21 +3,27 @@ from schedulers.first_fit import FirstFitScheduler
 from schedulers.random_scheduler import RandomScheduler
 from rl.agent import PGAgent
 
+import torch
 import numpy as np
 
 
 def evaluate_policy(env, agent=None, scheduler=None, steps=500):
     state = env.reset()
 
-    rewards, utils, queue_sizes = [], [], []
+    rewards = []
+    utils = []
+    queue_sizes = []
     completed = 0
 
     for _ in range(steps):
+        # -------- Select Action --------
         if agent:
-            action = agent.select_action(state)
+            with torch.no_grad():  # IMPORTANT: no training during eval
+                action = agent.select_action(state)
         else:
             action = scheduler.select_action(env.servers, list(env.queue), env.time)
 
+        # -------- Step Environment --------
         state, reward, done, info = env.step(action)
 
         rewards.append(reward)
@@ -36,19 +42,16 @@ def evaluate_policy(env, agent=None, scheduler=None, steps=500):
 if __name__ == "__main__":
     env = CloudEnv(num_servers=5, seed=42)
 
-    # Load trained agent
     state_dim = len(env.reset())
     action_dim = env.num_servers + 1
 
+    # -------- Load Trained RL Agent --------
     agent = PGAgent(state_dim, action_dim)
-    # Load trained weights
-    import torch
+
     agent.policy.load_state_dict(torch.load("pg_model.pth"))
+    agent.policy.eval()
 
-    agent.policy.eval()  # set to inference mode
-
-    # ⚠️ currently using untrained weights unless you save/load (next step)
-
+    # -------- Baselines --------
     schedulers = {
         "Random": RandomScheduler(env.num_servers),
         "FirstFit": FirstFitScheduler(env.num_servers),
@@ -61,6 +64,7 @@ if __name__ == "__main__":
         for k, v in result.items():
             print(f"{k}: {v:.4f}")
 
+    # -------- RL Agent --------
     print("\n--- RL Agent ---")
     result = evaluate_policy(env, agent=agent)
     for k, v in result.items():
