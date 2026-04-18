@@ -2,10 +2,11 @@ from env.cloud_env import CloudEnv
 from schedulers.first_fit import FirstFitScheduler
 from schedulers.random_scheduler import RandomScheduler
 from rl.agent import PGAgent
-
+import random
 import torch
 import numpy as np
-
+from rl.agent_ac import ACAgent
+from torch.distributions import Categorical
 
 def evaluate_policy(env, agent=None, scheduler=None, steps=500):
     state = env.reset()
@@ -19,7 +20,16 @@ def evaluate_policy(env, agent=None, scheduler=None, steps=500):
         # -------- Select Action --------
         if agent:
             with torch.no_grad():  # IMPORTANT: no training during eval
-                action = agent.select_action(state)
+                state_tensor = torch.tensor(state, dtype=torch.float32)
+                # Actor-Critic model
+                probs, _ = agent.model(state_tensor)
+                # print(probs.detach().numpy())
+                dist = Categorical(probs)
+                action = dist.sample().item()
+                if random.random() < 0.1:
+                    action = random.randint(0, env.num_servers)
+                else:
+                    action = dist.sample().item()
         else:
             action = scheduler.select_action(env.servers, list(env.queue), env.time)
 
@@ -46,10 +56,15 @@ if __name__ == "__main__":
     action_dim = env.num_servers + 1
 
     # -------- Load Trained RL Agent --------
-    agent = PGAgent(state_dim, action_dim)
+    # agent = PGAgent(state_dim, action_dim)
 
-    agent.policy.load_state_dict(torch.load("pg_model.pth"))
-    agent.policy.eval()
+    # agent.policy.load_state_dict(torch.load("pg_model.pth"))
+    # agent.policy.eval()
+
+    agent = ACAgent(state_dim, action_dim)
+
+    agent.model.load_state_dict(torch.load("ac_model.pth"))
+    agent.model.eval()
 
     # -------- Baselines --------
     schedulers = {
