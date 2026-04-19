@@ -23,16 +23,23 @@ def meta_train():
         for task in tasks:
             env = CloudEnv(num_servers=5, task_config=task)
 
-            adapted_agent = train_on_task(env, meta_agent)
+            adapted_agent = train_on_task(env, copy.deepcopy(meta_agent))
 
             meta_weights.append(adapted_agent.model.state_dict())
 
         # -------- Meta Update (simple averaging) --------
         new_state_dict = copy.deepcopy(meta_agent.model.state_dict())
 
+        meta_lr = 0.1  # meta learning rate
+
         for key in new_state_dict:
-            new_state_dict[key] = torch.mean(
+            task_avg = torch.mean(
                 torch.stack([w[key] for w in meta_weights]), dim=0
+            )
+
+            new_state_dict[key] = (
+                new_state_dict[key]
+                + meta_lr * (task_avg - new_state_dict[key])
             )
 
         meta_agent.model.load_state_dict(new_state_dict)

@@ -37,6 +37,11 @@ class ACAgent:
         self.rewards.append(reward)
 
     def update(self):
+        if len(self.rewards) == 0:
+            return
+        
+        if len(self.values) == 0:
+            return
         returns = []
         G = 0
 
@@ -45,7 +50,9 @@ class ACAgent:
             returns.insert(0, G)
 
         returns = torch.tensor(returns, dtype=torch.float32)
-        returns = (returns - returns.mean()) / (returns.std() + 1e-8)
+        if len(returns) > 1:
+            returns = (returns - returns.mean()) / (returns.std() + 1e-8)
+        
         values = torch.stack(self.values)
 
         # Advantage
