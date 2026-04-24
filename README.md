@@ -272,3 +272,79 @@ Key takeaway:
 
 ------------------------------------------------------------------------
 
+##  Meta-RL Improvements and Final Results
+
+###  Key Enhancements
+
+To improve performance and demonstrate a strong learning-based approach, the following upgrades were implemented:
+
+- Replaced naive RL with **Actor-Critic architecture**
+- Improved reward function to avoid negative-dominated learning signals
+- Added **queue pressure** to state representation for better global awareness
+- Implemented **Meta-Reinforcement Learning (Reptile-style)**
+- Designed **task distributions** with varying workloads (λ, resource ranges)
+- Strengthened **inner-loop training** (multiple updates per task)
+- Tuned **meta learning rate and adaptation steps**
+- Evaluated using **few-shot adaptation (10–20 steps)**
+
+---
+
+###  Final Experimental Results
+
+#### Baseline Comparison
+
+| Model     | Avg Reward | Utilization | Queue Size | Completed Tasks |
+|----------|------------|------------|------------|----------------|
+| Random   | ~0.10      | ~0.42      | High       | Low            |
+| RL       | ~0.15      | ~0.46      | Medium     | Medium         |
+| FirstFit | ~0.39      | ~0.61      | Low        | High           |
+
+---
+
+###  Meta-RL vs RL (Few-Shot Adaptation)
+
+| Task | Meta-RL (After) | RL (After) | Observation |
+|------|----------------|-----------|------------|
+| Task 1 | ~79 | ~59 | Meta significantly better |
+| Task 2 | ~84 | ~81 | Meta slightly better |
+| Task 3 | ~81 | ~74 | Meta better |
+
+---
+
+###  Key Observation
+
+Meta-RL consistently outperforms standard RL under limited adaptation steps.
+
+- Meta-RL adapts faster
+- RL requires more interaction to reach similar performance
+- Performance gap is largest in low-data regime
+
+---
+
+###  Interpretation
+
+- RL learns task-specific policies  
+- Meta-RL learns a generalized initialization  
+- This allows Meta-RL to:
+  - adapt quickly  
+  - generalize across workloads  
+
+---
+
+### Visualization
+
+Generated plots include:
+
+- Adaptation curves (Reward vs Steps)
+- Performance comparison charts
+
+Observed pattern:
+
+- Meta-RL → rapid early improvement  
+- RL → slower gradual improvement  
+
+---
+
+### Final Conclusion
+
+Meta-Reinforcement Learning enables faster adaptation and better performance under limited interaction, making it more suitable for dynamic cloud environments compared to standard RL.
