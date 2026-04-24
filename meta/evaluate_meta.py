@@ -34,7 +34,7 @@ def evaluate(env, agent, steps=300):
     }
 
 
-def adapt(agent, env, steps=100):
+def adapt(agent, env, steps=15):
     state = env.reset()
 
     for _ in range(steps):
@@ -60,7 +60,7 @@ if __name__ == "__main__":
 
     # -------- Load RL Model --------
     rl_agent = ACAgent(state_dim, action_dim)
-    rl_agent.model.load_state_dict(torch.load("ac_model.pth"))
+    # rl_agent.model.load_state_dict(torch.load("ac_model.pth"))
 
     print("\n=== META vs RL ADAPTATION TEST ===")
 

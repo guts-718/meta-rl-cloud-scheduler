@@ -15,7 +15,7 @@ def meta_train():
 
     meta_agent = ACAgent(state_dim, action_dim)
 
-    META_EPOCHS = 50
+    META_EPOCHS = 100
 
     for epoch in range(META_EPOCHS):
         meta_weights = []
@@ -23,14 +23,14 @@ def meta_train():
         for task in tasks:
             env = CloudEnv(num_servers=5, task_config=task)
 
-            adapted_agent = train_on_task(env, copy.deepcopy(meta_agent))
+            adapted_agent = train_on_task(env, copy.deepcopy(meta_agent),steps=500)
 
             meta_weights.append(adapted_agent.model.state_dict())
 
         # -------- Meta Update (simple averaging) --------
         new_state_dict = copy.deepcopy(meta_agent.model.state_dict())
 
-        meta_lr = 0.1  # meta learning rate
+        meta_lr = 0.5  # meta learning rate
 
         for key in new_state_dict:
             task_avg = torch.mean(

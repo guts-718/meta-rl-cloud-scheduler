@@ -18,6 +18,6 @@ def train_on_task(env, base_model, steps=300):
     if len(agent.rewards) == 0:
         return agent
 
-    for _ in range(3):   # multiple updates
+    for _ in range(8):   # multiple updates
         agent.update()
     return agent

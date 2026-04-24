@@ -1,4 +1,5 @@
 from env.cloud_env import CloudEnv
+from plot_results import plot_training_curve
 from rl.agent_ac import ACAgent
 
 import torch
@@ -36,4 +37,5 @@ for ep in range(EPISODES):
         avg = np.mean(reward_history[-10:])
         print(f"Ep {ep}, Reward: {total_reward:.2f}, Avg: {avg:.2f}")
 
+plot_training_curve(reward_history)
 torch.save(agent.model.state_dict(), "ac_model.pth")
